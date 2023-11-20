@@ -1,29 +1,23 @@
 package tech.csm.model;
 
-import java.io.Serializable;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
 import lombok.Data;
+
+import javax.persistence.*;
+import java.io.Serializable;
 
 @Data
 @Entity
 @Table(name = "state")
 public class State implements Serializable {
 
-	@Id
-	@Column(name = "state_id")
-	public Integer stateId;
+    @Id
+    @Column(name = "state_id")
+    public Integer stateId;
 
-	@Column(name = "state_name")
-	public String stateName;
+    @Column(name = "state_name")
+    public String stateName;
 
-	@ManyToOne
-	@JoinColumn(name = "country_id")
-	public Country country;
+    @ManyToOne
+    @JoinColumn(name = "country_id")
+    public Country country;
 }

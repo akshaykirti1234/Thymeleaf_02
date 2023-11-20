@@ -1,11 +1,11 @@
 package tech.csm.service;
 
-import java.util.List;
-
 import tech.csm.model.Country;
+
+import java.util.List;
 
 public interface CountryService {
 
-	List<Country> getAllCountry();
+    List<Country> getAllCountry();
 
 }

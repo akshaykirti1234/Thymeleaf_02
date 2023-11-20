@@ -1,11 +1,11 @@
 package tech.csm.service;
 
-import java.util.List;
-
 import tech.csm.model.Department;
+
+import java.util.List;
 
 public interface DepartmentService {
 
-	List<Department> getAllDepartments();
+    List<Department> getAllDepartments();
 
 }

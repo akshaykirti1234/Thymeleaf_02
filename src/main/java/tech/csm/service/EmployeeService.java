@@ -14,4 +14,6 @@ public interface EmployeeService {
 
 	Employee getEmployeeById(String empId);
 
+	void softDelete(String empId);
+
 }

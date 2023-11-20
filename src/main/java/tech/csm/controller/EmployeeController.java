@@ -8,11 +8,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import lombok.extern.slf4j.Slf4j;
+import tech.csm.model.Country;
+import tech.csm.model.Department;
 import tech.csm.model.District;
 import tech.csm.model.Employee;
 import tech.csm.model.State;
@@ -24,11 +28,13 @@ import tech.csm.service.StateService;
 import tech.csm.util.FileUpload;
 
 /***
- * 
+ *
  * @author akshaykirti.muduli
  *
  */
 @Controller
+@Slf4j
+@RequestMapping({ "/employee", "/" })
 public class EmployeeController {
 
 	@Autowired
@@ -42,71 +48,91 @@ public class EmployeeController {
 	@Autowired
 	DistrictService districtService;
 
-	@GetMapping("/")
-	public String welcome(Model model) {
+	// Home page
+	@GetMapping({ "/", "/homepage" })
+	public String homepage() {
+		return "HomePage";
+	}
 
-		model.addAttribute("empList", employeeService.getAllEmp());
-		model.addAttribute("deptList", departmentService.getAllDepartments());
-		model.addAttribute("countryList", countryService.getAllCountry());
-
+	// Show ALl Employee Page
+	@GetMapping("/view")
+	public String view(Model model) {
+		List<Employee> employeeList = employeeService.getAllEmp();
+		model.addAttribute("empList", employeeList);
 		return "View";
 	}
 
-	@ResponseBody
-	@GetMapping("/getStateByCountryId")
-	public List<State> getStateByCountryId(@RequestParam("countryId") Integer countryId) {
-		List<State> stateList = stateService.getAllState(countryId);
-		return stateList;
+	// Registration Page
+	@GetMapping("/register")
+	public String register(Model model, @ModelAttribute Employee employee) {
+		List<Country> countryList = countryService.getAllCountry();
+		List<Department> departmentList = departmentService.getAllDepartments();
+
+		model.addAttribute("countryList", countryList);
+		model.addAttribute("departmentList", departmentList);
+
+//		Send StateList and District List While Update
+		if (employee.getCountry() != null && employee.getState() != null) {
+
+			List<State> stateList = stateService.getAllState(employee.getCountry().countryId);
+			List<District> districtList = districtService.getAllDistricts(employee.getState().stateId);
+			model.addAttribute("stateList", stateList);
+			model.addAttribute("districtList", districtList);
+		}
+
+		return "Registration";
 	}
 
-	@ResponseBody
-	@GetMapping("/getDistrictByStateId")
-	public List<District> getDistrictByStateId(@RequestParam("stateId") Integer stateId) {
-		List<District> districtList = districtService.getAllDistricts(stateId);
-		return districtList;
-	}
-
+	// Save Employee
 	@PostMapping("/saveEmp")
-	public String saveEmp(@ModelAttribute Employee employee, @RequestParam("photo") MultipartFile photo,
+	public String saveEmp(@ModelAttribute Employee employee, @RequestParam MultipartFile photo,
 			RedirectAttributes redirectAttributes) {
 
-		// Set photo path
 		if (photo == null || photo.isEmpty()) {
 			Employee e = employeeService.getEmployeeById(employee.getEmpId());
 			employee.setPhotoPath(e.getPhotoPath());
 		} else {
 			employee.setPhotoPath(FileUpload.uploadFile(photo));
 		}
-		Employee e = employeeService.saveEmployee(employee);
-		redirectAttributes.addFlashAttribute("msg", "Register Successfully with id " + e.getEmpId());
-		return "redirect:/";
+		employee.setIsActive("yes");
+		Employee saved = employeeService.saveEmployee(employee);
+		redirectAttributes.addFlashAttribute("msg", "Employee Saved Successfully with id " + saved.empId);
+
+		return "redirect:./register";
 	}
 
-	@GetMapping("/deleteEmp")
-	public String deleteEmp(@RequestParam("empId") String empId, RedirectAttributes redirectAttributes) {
-		System.out.println(empId);
-		employeeService.deleteEmpById(empId);
-		redirectAttributes.addFlashAttribute("deleteMsg", "Deleted");
-		return "redirect:./";
+	// Fetch state by countryId and send back to UI as json
+	@ResponseBody
+	@GetMapping("/getStateByCountryId")
+	public List<State> getStateByCountryId(@RequestParam Integer countryId) {
+		List<State> stateList = stateService.getAllState(countryId);
+		return stateList;
 	}
 
-	@GetMapping("/editEmp")
-	public String editEmp(@RequestParam("empId") String empId, @RequestParam("countryId") Integer countryId,
-			@RequestParam("stateId") Integer stateId, Model model) {
+	// Fetch District by stateId and send back to UI as json
+	@ResponseBody
+	@GetMapping("/getDistrictByStateId")
+	public List<District> getDistrictByStateId(@RequestParam Integer stateId) {
+		List<District> districtList = districtService.getAllDistricts(stateId);
+		return districtList;
+	}
+
+	// Edit Employee Data
+	@GetMapping("/edit")
+	public String edit(@RequestParam String empId, RedirectAttributes redirectAttributes) {
 		Employee employee = employeeService.getEmployeeById(empId);
 
-		model.addAttribute("e", employee);
-		model.addAttribute("empList", employeeService.getAllEmp());
-		model.addAttribute("deptList", departmentService.getAllDepartments());
-		model.addAttribute("countryList", countryService.getAllCountry());
-		model.addAttribute("stateList", stateService.getAllState(countryId));
-		model.addAttribute("districtList", districtService.getAllDistricts(stateId));
-		return "demo";
+		redirectAttributes.addAttribute("employee", employee);
+
+		return "redirect:./register";
 	}
 
-	@GetMapping("/test")
-	public String test(@RequestParam String demo) {
-		System.out.println(demo);
-		return "demo";
+	@GetMapping("/delete")
+	public String delete(@RequestParam String empId, RedirectAttributes redirectAttributes) {
+//        employeeService.deleteEmpById(empId);
+		employeeService.softDelete(empId);
+		redirectAttributes.addFlashAttribute("deleteMsg", "Deleted");
+		return "redirect:./view";
 	}
+
 }

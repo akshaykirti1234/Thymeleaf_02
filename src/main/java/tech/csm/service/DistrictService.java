@@ -1,11 +1,11 @@
 package tech.csm.service;
 
-import java.util.List;
-
 import tech.csm.model.District;
+
+import java.util.List;
 
 public interface DistrictService {
 
-	List<District> getAllDistricts(Integer stateId);
+    List<District> getAllDistricts(Integer stateId);
 
 }

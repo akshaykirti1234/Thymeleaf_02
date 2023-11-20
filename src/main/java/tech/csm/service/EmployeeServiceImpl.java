@@ -16,7 +16,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Override
 	public List<Employee> getAllEmp() {
-		return employeeRepo.findAll();
+		return employeeRepo.getAllEmp();
 	}
 
 	@Override
@@ -32,6 +32,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 	@Override
 	public Employee getEmployeeById(String empId) {
 		return employeeRepo.findById(empId).get();
+	}
+
+	@Override
+	public void softDelete(String empId) {
+		employeeRepo.softDelete(empId);
 	}
 
 }
